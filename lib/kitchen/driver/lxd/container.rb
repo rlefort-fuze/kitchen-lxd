@@ -8,7 +8,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#		http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,31 +30,28 @@ module Kitchen
 				attr_reader :state
 
 				def initialize( name, image, logger )
+					@logger = logger
 					@name = name
 					@image = image
-					@logger = logger
 					update_state
 				end
 
 				def init
-					unless created?
-						run_command "lxc init #@image #@name"
-						update_state
-					end
+					return if created?
+					run_command "lxc init #@remote:#@image #@name"
+					update_state
 				end
 
 				def attach_network( network )
-					unless device_attached? network
-						run_command "lxc network attach #{network} #@name"
-						update_state
-					end
+					return if device_attached? network
+					run_command "lxc network attach #{network} #@name"
+					update_state
 				end
 
 				def start
-					unless running?
-						run_command "lxc start #@name"
-						update_state
-					end
+					return if running?
+					run_command "lxc start #@name"
+					update_state
 				end
 
 				def prepare_ssh
@@ -64,10 +61,9 @@ module Kitchen
 				end
 
 				def destroy
-					if created?
-						run_command "lxc delete #@name --force"
-						update_state
-					end
+					return unless created?
+					run_command "lxc delete #@name --force"
+					update_state
 				end
 
 				def wait_for_ipv4

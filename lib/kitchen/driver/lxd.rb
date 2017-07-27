@@ -8,7 +8,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#		http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@
 require 'kitchen'
 require_relative 'lxd/container'
 
+
 module Kitchen
 	module Driver
 		# Lxd driver for Kitchen.
@@ -27,6 +28,7 @@ module Kitchen
 		class Lxd < Kitchen::Driver::Base
 			kitchen_driver_api_version 2
 
+			default_config :remote, 'images'
 			default_config( :image ){|driver| driver.instance.platform.name }
 			default_config( :container ){|driver| driver.instance.name }
 
@@ -52,6 +54,7 @@ module Kitchen
 
 			def container
 				@container = Lxd::Container.new( config[:container], config[:image], logger ) if @container.nil?
+				#@container = Lxd::Container.new( logger, config ) if @container.nil?
 				@container
 			end
 		end
