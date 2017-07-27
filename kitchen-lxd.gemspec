@@ -2,16 +2,18 @@
 $:.push File.expand_path("../lib", __FILE__)
 require_relative 'lib/kitchen/driver/version'
 
+require 'date'
+
 Gem::Specification.new do |s|
 	s.name = 'kitchen-lxd'
-	s.version = Kitchen::Driver::LXD_VERSION
+	s.version = Kitchen::Driver::Lxd::VERSION
 	s.authors = ['Juri Timošin']
-	s.email = ['draco.ater@gmail.com', 'juri.timoshin@zeroturnaround.com']
+	s.email = ['draco.ater@gmail.com']
 	s.summary = 'An Lxd driver for Test Kitchen.'
 	s.description = 'Kitchen::Driver::Lxd - an Lxd driver for Test Kitchen.'
 	s.homepage = 'https://github.com/zeroturnaround/kitchen-lxd'
 	s.license = 'Apache-2.0'
-	s.date = '2017-01-30'
+	s.date = Date.today
 	
 	s.files = Dir['CHANGELOG.md', 'LICENSE', 'README.md', 'lib/**/*']
 	s.require_path = 'lib'

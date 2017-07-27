@@ -3,13 +3,15 @@ require 'rake/testtask'
 require 'rubygems/package_task'
 require 'ci/reporter/rake/minitest'
 
+require_relative 'lib/kitchen/driver/version'
+
 CLEAN << 'doc'
 
 Gem::PackageTask.new( Gem::Specification.load( 'kitchen-lxd.gemspec' ) ) do end
 
 desc 'Install this gem locally.'
 task :install, [:user_install] => :gem do |t, args|
-	args.with_defaults( user_install: false )
+	args.with_defaults( user_install: Process.uid != 0  )
 	Gem::Installer.new( "pkg/kitchen-lxd-#{Kitchen::Driver::Lxd::VERSION}.gem",
 		user_install: args.user_install ).install
 end
