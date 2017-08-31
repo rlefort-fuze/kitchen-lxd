@@ -29,40 +29,43 @@ module Kitchen
 				attr_reader :logger
 				attr_reader :state
 
-				def initialize( name, image, logger )
+				def initialize( logger, opts )
 					@logger = logger
-					@name = name
-					@image = image
+					@name = opts[:name]
+					@image = opts[:image]
+					@remote = opts[:remote]
+					@binary = opts[:binary]
 					update_state
 				end
 
 				def init
 					return if created?
-					run_command "lxc init #@remote:#@image #@name"
+					download_image unless image_exists?
+					run_command "#@binary init #@image #@name"
 					update_state
 				end
 
 				def attach_network( network )
 					return if device_attached? network
-					run_command "lxc network attach #{network} #@name"
+					run_command "#@binary network attach #{network} #@name"
 					update_state
 				end
 
 				def start
 					return if running?
-					run_command "lxc start #@name"
+					run_command "#@binary start #@name"
 					update_state
 				end
 
 				def prepare_ssh
-					run_command "lxc exec #@name mkdir -- -p /root/.ssh"
-					run_command "lxc file push ~/.ssh/id_rsa.pub #@name/root/.ssh/authorized_keys"
-					run_command "lxc exec #@name chown -- root:root /root/.ssh/authorized_keys"
+					run_command "#@binary exec #@name mkdir -- -p /root/.ssh"
+					run_command "#@binary file push ~/.ssh/id_rsa.pub #@name/root/.ssh/authorized_keys"
+					run_command "#@binary exec #@name chown -- root:root /root/.ssh/authorized_keys"
 				end
 
 				def destroy
 					return unless created?
-					run_command "lxc delete #@name --force"
+					run_command "#@binary delete #@name --force"
 					update_state
 				end
 
@@ -70,24 +73,44 @@ module Kitchen
 					info 'Wait for network to become ready.'
 					9.times do
 						update_state
-						s = @state['state'].nil? ? @state['State'] : @state['state']
-						inet = s['network']['eth0']['addresses'].detect do |i|
-							i['family'] == 'inet'
+						s = @state[:state].nil? ? @state[:State] : @state[:state]
+						inet = s[:network][:eth0][:addresses].detect do |i|
+							i[:family] == 'inet'
 						end
-						return inet['address'] if inet
+						return inet[:address] if inet
 						sleep 1 unless defined?( Minitest )
 					end
 					nil
 				end
 
+				def verify_dependencies
+					version = run_command( "#@binary --version" ).strip
+					if Gem::Version.new( version ) < Gem::Version.new( MIN_LXD_VERSION )
+						raise UserError, "Detected old version of Lxd (#{version}), please upgrade to version "\
+							"#{MIN_LXD_VERSION} or higher."
+					end
+				end
+
+				def download_image
+					run_command "#@binary image copy --copy-aliases #@remote:#@image local:"
+				end
+
 				private
 
+				def image_exists?
+					run_command "#@binary image show #@image"
+				rescue ShellCommandFailed
+					false
+				end
+
 				def update_state
-					@state = JSON.parse( run_command "lxc list #@name --format json" ).first
+					@state = JSON.parse(
+						run_command( "#@binary list #@name --format json"), symbolize_names: true
+					).first
 				end
 
 				def running?
-					@state['status'] == 'Running'
+					@state[:status] == 'Running'
 				end
 
 				def created?
@@ -95,7 +118,7 @@ module Kitchen
 				end
 
 				def device_attached?( network )
-					@state['devices'] and @state['devices'][network.to_s]
+					@state[:devices] and @state[:devices][network.to_sym]
 				end
 			end
 		end

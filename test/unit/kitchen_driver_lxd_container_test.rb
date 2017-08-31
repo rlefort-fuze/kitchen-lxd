@@ -70,7 +70,8 @@ module Kitchen
 				def setup
 					Lxd::Container.any_instance.expects( :run_command ).
 						with( 'lxc list c1 --format json' ).once.returns( '[]' )
-					@subj = Lxd::Container.new( 'c1', 'image1', ::Logger.new( StringIO.new ) )
+					@subj = Lxd::Container.new( ::Logger.new( StringIO.new ), name: 'c1', image: 'image1',
+						binary: 'lxc', remote: 'images' )
 				end
 
 				def test_constructor
@@ -80,21 +81,22 @@ module Kitchen
 				end
 
 				def test_init_success
+					@subj.expects( :run_command ).with( 'lxc image show image1' ).once.returns( "" )
 					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).once.
 						returns( INITIALISED_CONTAINER )
 					@subj.expects( :run_command ).with( 'lxc init image1 c1' ).once
 					@subj.init
-					assert_equal JSON.parse( INITIALISED_CONTAINER ).first, @subj.state
+					assert_equal JSON.parse( INITIALISED_CONTAINER, symbolize_names: true ).first, @subj.state
 				end
 
 				def test_init_already_created
 					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).once.
 						returns( INITIALISED_CONTAINER )
-					@subj.expects( :run_command ).with( 'lxc init image1 c1' ).never
+					@subj.expects( :run_command ).with( 'lxc init images:image1 c1' ).never
 					
 					@subj.send :update_state
 					@subj.init
-					assert_equal JSON.parse( INITIALISED_CONTAINER ).first, @subj.state
+					assert_equal JSON.parse( INITIALISED_CONTAINER, symbolize_names: true ).first, @subj.state
 				end
 
 				def test_attach_network_success
@@ -103,7 +105,7 @@ module Kitchen
 					@subj.expects( :run_command ).with( 'lxc network attach lxdbr0 c1' ).once
 					@subj.send :update_state
 					@subj.attach_network 'lxdbr0'
-					assert_equal JSON.parse( INITIALISED_CONTAINER_WITH_NETWORK ).first,
+					assert_equal JSON.parse( INITIALISED_CONTAINER_WITH_NETWORK, symbolize_names: true ).first,
 						@subj.state
 				end
 
@@ -121,7 +123,7 @@ module Kitchen
 					@subj.expects( :run_command ).with( 'lxc start c1' ).once
 					@subj.send :update_state
 					@subj.start
-					assert_equal JSON.parse( RUNNING_CONTAINER_WITH_NETWORK ).first, @subj.state
+					assert_equal JSON.parse( RUNNING_CONTAINER_WITH_NETWORK, symbolize_names: true ).first, @subj.state
 				end
 
 				def test_start_already_running

@@ -16,9 +16,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'kitchen'
+
 module Kitchen
 	module Driver
-		class Lxd
+		class Lxd < Kitchen::Driver::Base
 			# Version string for Lxd Kitchen driver
 			VERSION = '0.1.2'
 		end
