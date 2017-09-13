@@ -1,5 +1,8 @@
 ## Unreleased
 
+- Add LXD transport.
+- Remove ssh transport support.
+- Allow specifying network bridge to attach to.
 - Allow specifying path to lxc executable.
 - Support downloading image from remote, if it's not available locally.
 

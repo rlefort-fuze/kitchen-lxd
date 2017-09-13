@@ -31,6 +31,8 @@ module Kitchen
 
 			default_config :binary, 'lxc'
 			default_config :remote, 'images'
+			default_config :network, 'lxdbr0'
+			default_config :wait_until_ready, true
 
 			default_config :image do |driver|
 				driver.instance.platform.name
@@ -40,16 +42,12 @@ module Kitchen
 				driver.instance.name
 			end
 
-			attr_accessor :container
-
 			def create( state )
 				container.init
-				container.attach_network 'lxdbr0'
+				container.attach_network config[:network] if config[:network]
 				container.start
-				container.prepare_ssh
 
-				state[:hostname] = container.wait_for_ipv4
-				instance.transport.connection( state ).wait_until_ready
+				state[:hostname] = instance.transport.connection( state ).wait_until_ready if config[:wait_until_ready]
 			end
 
 			def destroy( state )
@@ -59,10 +57,13 @@ module Kitchen
 			end
 
 			def verify_dependencies
-				container.verify_dependencies
+				return
+				version = run_command( "#{config[:binary]} --version" ).strip
+				if Gem::Version.new( version ) < Gem::Version.new( MIN_LXD_VERSION )
+					raise UserError, "Detected old version of Lxd (#{version}), please upgrade to version "\
+						"#{MIN_LXD_VERSION} or higher."
+				end
 			end
-
-			private
 
 			def container
 				@container = Lxd::Container.new( logger, config ) if @container.nil?

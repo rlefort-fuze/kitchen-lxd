@@ -23,15 +23,15 @@ module Kitchen
 	module Driver
 		class Lxd < Kitchen::Driver::Base
 			class Container
-				include ShellOut
 				include Logging
+				include ShellOut
 
 				attr_reader :logger
 				attr_reader :state
 
 				def initialize( logger, opts )
 					@logger = logger
-					@name = opts[:name]
+					@name = opts[:container]
 					@image = opts[:image]
 					@remote = opts[:remote]
 					@binary = opts[:binary]
@@ -46,8 +46,7 @@ module Kitchen
 				end
 
 				def attach_network( network )
-					return if device_attached? network
-					run_command "#@binary network attach #{network} #@name"
+					run_command "#@binary network attach #{network} #@name" unless device_attached? network
 					update_state
 				end
 
@@ -57,19 +56,13 @@ module Kitchen
 					update_state
 				end
 
-				def prepare_ssh
-					run_command "#@binary exec #@name mkdir -- -p /root/.ssh"
-					run_command "#@binary file push ~/.ssh/id_rsa.pub #@name/root/.ssh/authorized_keys"
-					run_command "#@binary exec #@name chown -- root:root /root/.ssh/authorized_keys"
-				end
-
 				def destroy
 					return unless created?
 					run_command "#@binary delete #@name --force"
 					update_state
 				end
 
-				def wait_for_ipv4
+				def wait_until_ready
 					info 'Wait for network to become ready.'
 					9.times do
 						update_state
@@ -83,29 +76,36 @@ module Kitchen
 					nil
 				end
 
-				def verify_dependencies
-					version = run_command( "#@binary --version" ).strip
-					if Gem::Version.new( version ) < Gem::Version.new( MIN_LXD_VERSION )
-						raise UserError, "Detected old version of Lxd (#{version}), please upgrade to version "\
-							"#{MIN_LXD_VERSION} or higher."
-					end
-				end
-
 				def download_image
 					run_command "#@binary image copy --copy-aliases #@remote:#@image local:"
+				end
+
+				def execute( command )
+					return if command.nil?
+					run_command "#@binary exec #@name -- #{command}"
+				end
+
+				def login_command
+					LoginCommand.new( "#@binary exec #@name -- bash", {} )
+				end
+
+				def upload( locals, remote )
+					locals.each do |local|
+						run_command "#@binary file push -rp #{local} #@name/#{remote}"
+					end
 				end
 
 				private
 
 				def image_exists?
-					run_command "#@binary image show #@image"
-				rescue ShellCommandFailed
-					false
+					!JSON.parse(
+						run_command( "#@binary image list #@image --format json" ), symbolize_names: true
+					).empty?
 				end
 
 				def update_state
 					@state = JSON.parse(
-						run_command( "#@binary list #@name --format json"), symbolize_names: true
+						run_command( "#@binary list #@name --format json" ), symbolize_names: true
 					).first
 				end
 

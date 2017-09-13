@@ -1,21 +1,33 @@
-# <a name="title"></a> Kitchen::Lxd
+# Kitchen::Lxd
 
 [![Build Status](https://travis-ci.org/zeroturnaround/kitchen-lxd.svg?branch=master)](https://travis-ci.org/zeroturnaround/kitchen-lxd)
 
-A Test Kitchen Driver for Lxd.
+- [Requirements](#requirements)
+	- [Lxd](#lxd)
+- [Installation and Setup](#installation-and-setup)
+- [Configuration](#configuration)
+	- [Driver](#driver)
+	- [Transport](#transport)
+- [Development](#development)
+- [Authors](#authors)
+- [License](#license)
 
-## <a name="requirements"></a> Requirements
+A Test Kitchen Driver (with Transport) for Lxd.
+
+## Requirements
 
 ### Lxd
 
-Lxd version of 2.3 (the one where "lxc network" commands were introduced) or higher is required for
-this driver which means that a native package must be installed on the system running Test Kitchen.
-You must also prepare a container to be used by Test Kitchen. For that make sure there is ssh daemon
-installed and starting on boot. ( On Ubuntu it can be done by simply installing 'openssh-server'
-package. ) You can also install Chef Client there, if you do not want Test Kitchen to install it
-every time the container is started.
+Lxd version of 2.3 (the one where "lxc network" commands were introduced) or higher is required
+for this driver which means that a native package must be installed on the system running Test
+Kitchen.
 
-## <a name="installation"></a> Installation and Setup
+You do not have to prepare any container image specifically, like downloading it or installing ssh
+server. The driver will download container image automatically from the provided remote server,
+if it's not available locally. Also you can use `lxd` transport instead of default `ssh`. Which
+means files will be uploaded to container using `lxc file push` command.
+
+## Installation and Setup
 
 Install using command line:
 
@@ -23,74 +35,43 @@ Install using command line:
 gem install kitchen-lxd
 ```
 
-## <a name="config"></a> Configuration
+## Configuration
+
+Example config file may look like this:
+
+```yaml
+---
+driver:
+  name: lxd
+  binary: lxc # this is default
+  remote: images # this is default
+  network: lxdbr0 # this is default
+
+transport:
+  name: lxd
+```
+
+Default values can be omitted, so the minimal config file looks like this:
+
+```yaml
+---
+driver: lxd
+
+transport: lxd
+```
+
+### Driver
 
 Available options:
 
-- image
-- container
-- require_chef_omnibus
+Name | Description | Type | Default
+-----|-------------|------|--------
+binary | Path to lxc executable | String | `lxc`
+remote | Remote LXD server to download image from, if it does not exist locally | String | `images`
+network | Network bridge to attach to container | String | `lxdbr0`
+wait_until_ready | Wait for the network to come up | Boolean | `true`
 
-### image
-
-Define from which lxd image the container will be created.
-
-```yaml
----
-driver:
-  image: ubuntu/xenial/amd64
-```
-
-The default is value of `platform name`.
-
-```yaml
----
-platforms:
-  - name: kitchen-xenial64
-```
-
-In this case: 'kitchen-xenial64', expecting to have an lxd image with this name locally.
-
-### container
-
-Created container name.
-
-```yaml
----
-driver:
-  container_name: my_name
-```
-
-The default is value of `kitchen instance name`.
-
-```yaml
----
-platforms:
-  - name: kitchen-xenial64
-
-suites:
-  - name: webserver
-```
-
-In this case: 'webserver-kitchen-xenial64'.
-
-### <a name="config-require-chef-omnibus"></a> require\_chef\_omnibus
-
-Determines whether or not a Chef [Omnibus package][chef_omnibus_dl] will be
-installed. There are several different behaviors available:
-
-- `true` - the latest release will be installed. Subsequent converges
-  will skip re-installing if chef is present.
-- `latest` - the latest release will be installed. Subsequent converges
-  will always re-install even if chef is present.
-- `<VERSION_STRING>` (ex: `10.24.0`) - the desired version string will
-  be passed the the install.sh script. Subsequent converges will skip if
-  the installed version and the desired version match.
-- `false` or `nil` - no chef is installed.
-
-The default value is unset, or `nil`.
-
-## <a name="development"></a> Development
+## Development
 
 - Source hosted at [GitHub][repo]
 - Report issues/questions/feature requests on [GitHub Issues][issues]
@@ -105,18 +86,15 @@ example:
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
 
-## <a name="authors"></a> Authors
+## Authors
 
-Created and maintained by [ZeroTurnaround][author].
+Created and maintained by [Juri Timošin][author].
 
-## <a name="license"></a> License
+## License
 
 Apache 2.0 (see [LICENSE][license])
 
-
-[author]:           https://github.com/zeroturnaround
-[issues]:           https://github.com/zeroturnaround/kitchen-lxd/issues
-[license]:          https://github.com/zeroturnaround/kitchen-lxd/blob/master/LICENSE
-[repo]:             https://github.com/zeroturnaround/kitchen-lxd
-[driver_usage]:     http://docs.kitchen-ci.org/drivers/usage
-[chef_omnibus_dl]:  http://www.chef.io/chef/install/
+[author]:           https://github.com/DracoAter
+[issues]:           https://github.com/DracoAter/kitchen-lxd/issues
+[license]:          https://github.com/DracoAter/kitchen-lxd/blob/master/LICENSE
+[repo]:             https://github.com/DracoAter/kitchen-lxd

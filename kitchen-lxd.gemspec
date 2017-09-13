@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
 	s.email = ['draco.ater@gmail.com']
 	s.summary = 'An Lxd driver for Test Kitchen.'
 	s.description = 'Kitchen::Driver::Lxd - an Lxd driver for Test Kitchen.'
-	s.homepage = 'https://github.com/zeroturnaround/kitchen-lxd'
+	s.homepage = 'https://github.com/DracoAter/kitchen-lxd'
 	s.license = 'Apache-2.0'
 	s.date = Date.today
 	
