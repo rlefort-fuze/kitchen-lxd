@@ -68,10 +68,8 @@ module Kitchen
 					's_code":102,"state":null,"snapshots":[]}]'
 
 				def setup
-					Lxd::Container.any_instance.expects( :run_command ).
-						with( 'lxc list c1 --format json' ).once.returns( '[]' )
-					@subj = Lxd::Container.new( ::Logger.new( StringIO.new ), name: 'c1', image: 'image1',
-						binary: 'lxc', remote: 'images' )
+					@subj = Lxd::Container.new( ::Logger.new( StringIO.new ), container: 'c1',
+						image: 'image1', binary: 'lxc', remote: 'images' )
 				end
 
 				def test_constructor
@@ -81,56 +79,47 @@ module Kitchen
 				end
 
 				def test_init_success
-					@subj.expects( :run_command ).with( 'lxc image show image1' ).once.returns( "" )
-					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).once.
-						returns( INITIALISED_CONTAINER )
+					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).once.returns( '[]' )
+					@subj.expects( :run_command ).with( 'lxc image list image1 --format json' ).once.
+						returns( "[]" )
+					@subj.expects( :run_command ).with( 'lxc image copy --copy-aliases images:image1 local:' ).once
 					@subj.expects( :run_command ).with( 'lxc init image1 c1' ).once
 					@subj.init
-					assert_equal JSON.parse( INITIALISED_CONTAINER, symbolize_names: true ).first, @subj.state
 				end
 
 				def test_init_already_created
 					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).once.
 						returns( INITIALISED_CONTAINER )
 					@subj.expects( :run_command ).with( 'lxc init images:image1 c1' ).never
-					
-					@subj.send :update_state
 					@subj.init
 					assert_equal JSON.parse( INITIALISED_CONTAINER, symbolize_names: true ).first, @subj.state
 				end
 
 				def test_attach_network_success
-					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).twice.
-						returns( INITIALISED_CONTAINER, INITIALISED_CONTAINER_WITH_NETWORK )
+					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).once.
+						returns( INITIALISED_CONTAINER )
 					@subj.expects( :run_command ).with( 'lxc network attach lxdbr0 c1' ).once
-					@subj.send :update_state
 					@subj.attach_network 'lxdbr0'
-					assert_equal JSON.parse( INITIALISED_CONTAINER_WITH_NETWORK, symbolize_names: true ).first,
-						@subj.state
 				end
 
 				def test_attach_network_already_attached
 					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).once.
 						returns( INITIALISED_CONTAINER_WITH_NETWORK )
 					@subj.expects( :run_command ).with( 'lxc network attach lxdbr0 c1' ).never
-					@subj.send :update_state
 					@subj.attach_network 'lxdbr0'
 				end
 
 				def test_start_success
-					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).twice.
-						returns( INITIALISED_CONTAINER_WITH_NETWORK, RUNNING_CONTAINER_WITH_NETWORK )
+					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).once.
+						returns( INITIALISED_CONTAINER_WITH_NETWORK )
 					@subj.expects( :run_command ).with( 'lxc start c1' ).once
-					@subj.send :update_state
 					@subj.start
-					assert_equal JSON.parse( RUNNING_CONTAINER_WITH_NETWORK, symbolize_names: true ).first, @subj.state
 				end
 
 				def test_start_already_running
 					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).once.
 						returns( RUNNING_CONTAINER_WITH_NETWORK )
 					@subj.expects( :run_command ).with( 'lxc start c1' ).never
-					@subj.send :update_state
 					@subj.start
 				end
 
@@ -142,41 +131,38 @@ module Kitchen
 				end
 
 				def test_destroy_success
-					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).twice.
-						returns( INITIALISED_CONTAINER_WITH_NETWORK, '[]' )
+					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).once.
+						returns( INITIALISED_CONTAINER_WITH_NETWORK )
 					@subj.expects( :run_command ).with( 'lxc delete c1 --force' ).once
-					@subj.send :update_state
 					@subj.destroy
-					assert_nil @subj.state
 				end
 
 				def test_destroy_not_existing
+					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).once.
+						returns( '[]' )
 					@subj.expects( :run_command ).with( 'lxc delete c1 --force' ).never
 					@subj.destroy
 				end
 
-				def test_wait_for_ipv4_success
+				def test_wait_until_ready_success
 					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).times( 3 ).
 						returns( RUNNING_CONTAINER, RUNNING_CONTAINER, RUNNING_CONTAINER_WITH_NETWORK )
-					assert_equal '10.0.4.46', @subj.wait_for_ipv4
+					assert_equal '10.0.4.46', @subj.wait_until_ready
 				end
 
-				def test_wait_for_ipv4_fail
+				def test_wait_until_ready_fail
 					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).times( 9 ).
 						returns( RUNNING_CONTAINER )
-					assert_nil @subj.wait_for_ipv4
+					assert_nil @subj.wait_until_ready
 				end
 
 				def test_running_success
 					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).
 						returns( RUNNING_CONTAINER_WITH_NETWORK )
-					@subj.send :update_state
 					assert @subj.send( :running? )
 					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).twice.
 						returns( INITIALISED_CONTAINER, INITIALISED_CONTAINER_WITH_NETWORK )
-					@subj.send :update_state
 					refute @subj.send( :running? )
-					@subj.send :update_state
 					refute @subj.send( :running? )
 				end
 
@@ -184,20 +170,15 @@ module Kitchen
 					refute @subj.send( :created? )
 					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).
 						returns( RUNNING_CONTAINER_WITH_NETWORK )
-					@subj.send :update_state
 					assert @subj.send( :created? )
 				end
 
 				def test_device_attached_success
 					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).
 						returns( INITIALISED_CONTAINER )
-					@subj.send :update_state
 					refute @subj.send( :device_attached?, 'lxdbr0' )
-					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).twice.
+					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).times( 3 ).
 						returns( RUNNING_CONTAINER_WITH_NETWORK, INITIALISED_CONTAINER_WITH_NETWORK )
-					@subj.send :update_state
-					assert @subj.send( :device_attached?, 'lxdbr0' )
-					@subj.send :update_state
 					assert @subj.send( :device_attached?, 'lxdbr0' )
 					assert @subj.send( :device_attached?, :lxdbr0 )
 					refute @subj.send( :device_attached?, 'lxdbr1' )

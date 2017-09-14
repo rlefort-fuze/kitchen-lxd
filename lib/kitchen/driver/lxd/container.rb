@@ -8,7 +8,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#		http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,8 +23,8 @@ module Kitchen
 	module Driver
 		class Lxd < Kitchen::Driver::Base
 			class Container
-				include Logging
 				include ShellOut
+				include Logging
 
 				attr_reader :logger
 				attr_reader :state
@@ -35,38 +35,33 @@ module Kitchen
 					@image = opts[:image]
 					@remote = opts[:remote]
 					@binary = opts[:binary]
-					update_state
 				end
 
 				def init
 					return if created?
 					download_image unless image_exists?
 					run_command "#@binary init #@image #@name"
-					update_state
 				end
 
 				def attach_network( network )
-					run_command "#@binary network attach #{network} #@name" unless device_attached? network
-					update_state
+					return if device_attached? network
+					run_command "#@binary network attach #{network} #@name"
 				end
 
 				def start
 					return if running?
 					run_command "#@binary start #@name"
-					update_state
 				end
 
 				def destroy
 					return unless created?
 					run_command "#@binary delete #@name --force"
-					update_state
 				end
 
 				def wait_until_ready
 					info 'Wait for network to become ready.'
 					9.times do
-						update_state
-						s = @state[:state].nil? ? @state[:State] : @state[:state]
+						s = fetch_state[:state].nil? ? @state[:State] : @state[:state]
 						inet = s[:network][:eth0][:addresses].detect do |i|
 							i[:family] == 'inet'
 						end
@@ -103,22 +98,22 @@ module Kitchen
 					).empty?
 				end
 
-				def update_state
+				def fetch_state
 					@state = JSON.parse(
 						run_command( "#@binary list #@name --format json" ), symbolize_names: true
 					).first
 				end
 
 				def running?
-					@state[:status] == 'Running'
+					fetch_state[:status] == 'Running'
 				end
 
 				def created?
-					!@state.nil?
+					!fetch_state.nil?
 				end
 
 				def device_attached?( network )
-					@state[:devices] and @state[:devices][network.to_sym]
+					fetch_state[:devices] and @state[:devices][network.to_sym]
 				end
 			end
 		end
