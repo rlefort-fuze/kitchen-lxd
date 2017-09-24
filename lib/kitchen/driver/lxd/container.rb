@@ -90,6 +90,14 @@ module Kitchen
 					end
 				end
 
+				def fix_chef_install( platform )
+					case platform
+					when /ubuntu/, /debian/
+						execute "apt install -y wget"
+					when /rhel/, /centos/
+						execute 'yum install -y sudo wget'
+					end
+				end
 				private
 
 				def image_exists?

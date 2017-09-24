@@ -33,6 +33,7 @@ module Kitchen
 			default_config :remote, 'images'
 			default_config :network, 'lxdbr0'
 			default_config :wait_until_ready, true
+			default_config :fix_chef_install, false
 
 			default_config :image do |driver|
 				driver.instance.platform.name
@@ -48,6 +49,7 @@ module Kitchen
 				container.start
 
 				state[:hostname] = instance.transport.connection( state ).wait_until_ready if config[:wait_until_ready]
+				container.fix_chef_install( instance.platform.name ) if config[:fix_chef_install]
 			end
 
 			def destroy( state )
