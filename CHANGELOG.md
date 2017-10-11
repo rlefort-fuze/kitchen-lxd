@@ -1,4 +1,4 @@
-## Unreleased
+## 0.2.0 (2017-10-11)
 
 - Add LXD transport.
 - Remove ssh transport support.
