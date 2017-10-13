@@ -1,3 +1,7 @@
+## 0.2.1 (2017-10-13)
+
+- Add workaround to Ubuntu hostnamectl bug in LXD (https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1575779)
+
 ## 0.2.0 (2017-10-11)
 
 - Add LXD transport.

@@ -123,13 +123,6 @@ module Kitchen
 					@subj.start
 				end
 
-				def test_prepare_ssh_success
-					@subj.expects( :run_command ).with( 'lxc exec c1 mkdir -- -p /root/.ssh' )
-					@subj.expects( :run_command ).with( 'lxc file push ~/.ssh/id_rsa.pub c1/root/.ssh/authorized_keys' )
-					@subj.expects( :run_command ).with( 'lxc exec c1 chown -- root:root /root/.ssh/authorized_keys' )
-					@subj.prepare_ssh
-				end
-
 				def test_destroy_success
 					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).once.
 						returns( INITIALISED_CONTAINER_WITH_NETWORK )
@@ -167,6 +160,8 @@ module Kitchen
 				end
 
 				def test_created_success
+					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).
+						returns( '[]' )
 					refute @subj.send( :created? )
 					@subj.expects( :run_command ).with( 'lxc list c1 --format json' ).
 						returns( RUNNING_CONTAINER_WITH_NETWORK )

@@ -98,6 +98,13 @@ module Kitchen
 						execute 'yum install -y sudo wget'
 					end
 				end
+
+				def fix_hostnamectl_bug
+					logger.info "Replace /usr/bin/hostnamectl with /usr/bin/true, because of bug in Ubuntu. (https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1575779)"
+					execute 'rm /usr/bin/hostnamectl'
+					execute 'ln -s /usr/bin/true /usr/bin/hostnamectl'
+				end
+
 				private
 
 				def image_exists?

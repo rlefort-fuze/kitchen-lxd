@@ -34,6 +34,7 @@ module Kitchen
 			default_config :network, 'lxdbr0'
 			default_config :wait_until_ready, true
 			default_config :fix_chef_install, false
+			default_config :fix_hostnamectl_bug, true # https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1575779
 
 			default_config :image do |driver|
 				driver.instance.platform.name
@@ -50,6 +51,7 @@ module Kitchen
 
 				state[:hostname] = instance.transport.connection( state ).wait_until_ready if config[:wait_until_ready]
 				container.fix_chef_install( instance.platform.name ) if config[:fix_chef_install]
+				container.fix_hostnamectl_bug if config[:fix_hostnamectl_bug]
 			end
 
 			def destroy( state )
@@ -68,8 +70,7 @@ module Kitchen
 			end
 
 			def container
-				@container = Lxd::Container.new( logger, config ) if @container.nil?
-				@container
+				@container ||= Lxd::Container.new( logger, config )
 			end
 		end
 	end

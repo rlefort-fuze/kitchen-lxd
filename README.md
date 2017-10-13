@@ -1,6 +1,7 @@
 # Kitchen::Lxd
 
-[![Build Status](https://travis-ci.org/zeroturnaround/kitchen-lxd.svg?branch=master)](https://travis-ci.org/zeroturnaround/kitchen-lxd)
+[![Build Status](https://travis-ci.org/DracoAter/kitchen-lxd.svg?branch=master)](https://travis-ci.org/DracoAter/kitchen-lxd)
+[![Gem Version](https://badge.fury.io/rb/kitchen-lxd.svg)](https://badge.fury.io/rb/kitchen-lxd)
 
 - [Requirements](#requirements)
 	- [Lxd](#lxd)
@@ -44,8 +45,10 @@ Example config file may look like this:
 driver:
   name: lxd
   binary: lxc # this is default
-  remote: images # this is default
-  network: lxdbr0 # this is default
+  remote: images # default
+  network: lxdbr0 # default
+  fix_chef_install: false # default
+  fix_hostnamectl_bug: true # default
 
 transport:
   name: lxd
@@ -55,9 +58,11 @@ Default values can be omitted, so the minimal config file looks like this:
 
 ```yaml
 ---
-driver: lxd
+driver:
+  name: lxd
 
-transport: lxd
+transport:
+  name: lxd
 ```
 
 ### Driver
@@ -66,10 +71,12 @@ Available options:
 
 Name | Description | Type | Default
 -----|-------------|------|--------
-binary | Path to lxc executable | String | `lxc`
-remote | Remote LXD server to download image from, if it does not exist locally | String | `images`
-network | Network bridge to attach to container | String | `lxdbr0`
-wait_until_ready | Wait for the network to come up | Boolean | `true`
+binary | Path to lxc executable. | String | `lxc`
+remote | Remote LXD server to download image from, if it does not exist locally. | String | `images`
+network | Network bridge to attach to container. | String | `lxdbr0`
+wait_until_ready | Wait for the network to come up. | Boolean | `true`
+fix_chef_install | Apply fix, to make available installation of Chef Omnibus package. | Boolean | `false`
+fix_hostnamectl_bug | Apply workaround to Ubuntu [hostnamectl bug](https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1575779) in LXD. | Boolean | `true`
 
 ## Development
 
