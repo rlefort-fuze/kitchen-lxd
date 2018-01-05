@@ -1,0 +1,22 @@
+<% # Make sure the local copy of the driver is loaded %>
+<% lib = File.expand_path('lib', __dir__) %>
+<% $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib) %>
+---
+driver:
+  name: lxd
+
+transport:
+  name: lxd
+
+#provisioner:
+#  name: shell
+#
+#verifier:
+#  name: shell
+#  command: rake test:integration
+#
+platforms:
+  - name: ubuntu/xenial/i386
+
+suites:
+  - name: default
