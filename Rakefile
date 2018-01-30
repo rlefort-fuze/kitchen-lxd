@@ -1,11 +1,12 @@
 require 'rake/clean'
 require 'rake/testtask'
 require 'rubygems/package_task'
-require 'ci/reporter/rake/minitest'
 
 require_relative 'lib/kitchen/driver/version'
 
 CLEAN << 'doc'
+CLEAN << 'test/coverage'
+CLEAN << 'test/reports'
 
 Gem::PackageTask.new( Gem::Specification.load( 'kitchen-lxd.gemspec' ) ) do end
 
@@ -17,13 +18,27 @@ task :install, [:user_install] => :gem do |t, args|
 end
 
 namespace :test do
-	CLEAN << 'test/coverage'
-	CLEAN << 'test/reports'
+	%w{unit integration}.each do |name|
+		Rake::TestTask.new name do |t|
+			t.description = "Run #{name} tests and generate coverage reports."
+			t.verbose = true
+			t.warning = true
+			t.test_files = FileList["test/#{name}/*_test.rb"]
+		end
+	end
 
-	Rake::TestTask.new :unit do |t|
-		t.verbose = true
-		t.warning = true
-		t.deps = ['ci:setup:minitest'] if ENV['CI_REPORTS']
-		t.test_files = FileList['test/unit/*_test.rb']
+	desc 'Run all tests and generate coverage reports.'
+	task :all => [:unit, :integration]
+end
+
+namespace :ci do
+	%w{all unit integration}.each do |name|
+		desc "Run #{name} tests and generate report for CI."
+		task name do
+			ENV['CI_REPORTS'] = 'test/reports/'
+			require 'ci/reporter/rake/minitest'
+			Rake::Task['ci:setup:minitest'].invoke
+			Rake::Task["test:#{name}"].invoke
+		end
 	end
 end

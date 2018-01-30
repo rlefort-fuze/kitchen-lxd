@@ -7,7 +7,9 @@ if [ "$RUBY_ENV" = "test" ]; then
 	# clean from scratch application. This almost always means a ci environment,
 	# since we set the environment to `test` directly in `script/cibuild`.
 	script/bootstrap
-	export CI_REPORTS="test/reports/unit"
+	#should be after bootstrap, because otherwise required gem is not installed
+	echo "==== Running unit tests ===="
+	rake ci:unit $@
 else
 	# if the environment isn't set to `test`, set it to `test` and update the
 	# application to ensure all dependencies are met as well as any other things
@@ -15,9 +17,7 @@ else
 	# already been set to `test` almost always means this is being called on it's
 	# own from a `development` environment.
 	script/bootstrap
-	export RUBY_ENV='test'
+	export RUBY_ENV="test"
+	echo "==== Running unit tests ===="
+	rake test:unit $@
 fi
-
-echo "=> Run unit tests"
-rake test:unit
-echo "=> Done"

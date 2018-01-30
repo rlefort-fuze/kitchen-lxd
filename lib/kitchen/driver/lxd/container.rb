@@ -62,11 +62,11 @@ module Kitchen
 					info 'Wait for network to become ready.'
 					9.times do
 						s = fetch_state[:state].nil? ? @state[:State] : @state[:state]
-						inet = s[:network][:eth0][:addresses].detect do |i|
+						inet = s.dig(:network, :eth0, :addresses)&.detect do |i|
 							i[:family] == 'inet'
 						end
 						return inet[:address] if inet
-						sleep 1 unless defined?( Minitest )
+						sleep 1 unless defined?( Kitchen::Driver::UnitTest )
 					end
 					nil
 				end
@@ -76,18 +76,17 @@ module Kitchen
 				end
 
 				def execute( command )
-					return if command.nil?
+					return if command.nil? or command.empty?
 					run_command "#@binary exec #@name -- #{command}"
 				end
 
 				def login_command
-					LoginCommand.new( "#@binary exec #@name -- bash", {} )
+					LoginCommand.new( "#@binary exec #@name -- sh", {} )
 				end
 
 				def upload( locals, remote )
-					locals.each do |local|
-						run_command "#@binary file push -rp #{local} #@name/#{remote}"
-					end
+					# Mixlib::ShellOut.new("#@binary file push --verbose --debug -r #{locals.join(' ')} #@name#{remote}" ).run_command
+					run_command "#@binary file push -r #{locals.join(' ')} #@name#{remote}"
 				end
 
 				def fix_chef_install( platform )
@@ -105,7 +104,7 @@ module Kitchen
 					execute 'ln -s /usr/bin/true /usr/bin/hostnamectl'
 				end
 
-				private
+#				private
 
 				def image_exists?
 					!JSON.parse(
@@ -128,7 +127,7 @@ module Kitchen
 				end
 
 				def device_attached?( network )
-					fetch_state[:devices] and @state[:devices][network.to_sym]
+					fetch_state.dig(:devices, network.to_sym) ? true : false
 				end
 			end
 		end
