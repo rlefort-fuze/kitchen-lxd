@@ -6,8 +6,8 @@
 # Set environment to 'test' so other scripts knew, that we are on ci server.
 export RUBY_ENV='test'
 
-# Run tests
-script/test
+# Run unit tests
+script/unit_test
 
 echo "=> Build gem"
 rake gem
