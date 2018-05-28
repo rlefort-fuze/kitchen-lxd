@@ -1,18 +1,19 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 # script/bootstrap: Resolve all dependencies that application requires to run.
 
 require 'rubygems/dependency_installer'
 
 puts '=> Install gem dependencies'
-installer = Gem::Installer.new( '' )
-unsatisfied_dependencies = Gem::Specification.load( 'kitchen-lxd.gemspec' ).
-	dependencies.select do |dp|
-		!installer.installation_satisfies_dependency? dp
+installer = Gem::Installer.new('')
+unsatisfied_dependencies = Gem::Specification.load('kitchen-lxd.gemspec').
+	dependencies.reject do |dp|
+		installer.installation_satisfies_dependency? dp
 	end
 
 # For RVM we must install "globally", but in other cases we install to user home
-dpi = Gem::DependencyInstaller.new( user_install: ENV['rvm_path'].nil? )
+dpi = Gem::DependencyInstaller.new(user_install: ENV['rvm_path'].nil?)
 unsatisfied_dependencies.each{|dp| dpi.install dp }
 
 puts '=> Done'

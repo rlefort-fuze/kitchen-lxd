@@ -1,4 +1,6 @@
-# -*- encoding: utf-8 -*-
+
+# frozen_string_literal: true
+
 require_relative 'lib/kitchen/driver/version'
 require 'date'
 
@@ -12,7 +14,7 @@ Gem::Specification.new do |s|
 	s.homepage = 'https://github.com/DracoAter/kitchen-lxd'
 	s.license = 'Apache-2.0'
 	s.date = Date.today
-	
+
 	s.files = Dir['CHANGELOG.md', 'LICENSE', 'README.md', 'lib/**/*']
 	s.require_path = 'lib'
 
@@ -20,8 +22,8 @@ Gem::Specification.new do |s|
 
 	s.add_dependency 'test-kitchen', '~> 1.17'
 
-	s.add_development_dependency 'rake', '~> 12.0'
-	s.add_development_dependency 'minitest', '~> 5.5'
 	s.add_development_dependency 'ci_reporter_minitest', '~> 1.0'
+	s.add_development_dependency 'minitest', '~> 5.5'
+	s.add_development_dependency 'rake', '~> 12.0'
 	s.add_development_dependency 'simplecov', '~> 0.10'
 end

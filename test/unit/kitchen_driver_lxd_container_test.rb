@@ -1,8 +1,10 @@
-# -*- encoding: utf-8 -*-
+
+# frozen_string_literal: true
+
 #
-# Author:: Juri Timošin (<draco.ater@gmail.com>)
+# Author:: Juri Timoshin (<draco.ater@gmail.com>)
 #
-# Copyright (C) 2017, Juri Timošin
+# Copyright (C) 2017, Juri Timoshin
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,19 +27,20 @@ module Kitchen
 			module UnitTest
 				class ContainerTest < Minitest::Test
 					def setup
-						@subj = Lxd::Container.new( ::Logger.new( StringIO.new ), container: 'kitchen-lxd-test',
-							image: 'alpine/3.6', binary: 'lxc', remote: 'images' )
+						@subj = Lxd::Container.new(::Logger.new(StringIO.new), container: 'kitchen-lxd-test',
+							image: 'alpine/3.6', binary: 'lxc', remote: 'images')
 					end
 
 					def test_constructor
-						assert_equal 'kitchen-lxd-test', @subj.instance_variable_get( :@name )
-						assert_equal 'alpine/3.6', @subj.instance_variable_get( :@image )
-						assert_equal 'lxc', @subj.instance_variable_get( :@binary )
-						assert_equal 'images', @subj.instance_variable_get( :@remote )
+						assert_equal 'kitchen-lxd-test', @subj.instance_variable_get(:@name)
+						assert_equal 'alpine/3.6', @subj.instance_variable_get(:@image)
+						assert_equal 'lxc', @subj.instance_variable_get(:@binary)
+						assert_equal 'images', @subj.instance_variable_get(:@remote)
 					end
 
 					def test_login_command
-						assert_equal 'lxc exec kitchen-lxd-test -- sh', @subj.login_command.command
+						assert_equal 'lxc exec kitchen-lxd-test -- $(lxc exec kitchen-lxd-test -- head -1 '\
+							'/etc/passwd | cut -d: -f7)', @subj.login_command.command
 					end
 				end
 			end

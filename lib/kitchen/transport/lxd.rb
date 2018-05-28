@@ -1,8 +1,10 @@
-# -*- encoding: utf-8 -*-
+
+# frozen_string_literal: true
+
 #
-# Author:: Juri Timošin (<draco.ater@gmail.com>)
+# Author:: Juri Timoshin (<draco.ater@gmail.com>)
 #
-# Copyright (C) 2017, Juri Timošin
+# Copyright (C) 2017, Juri Timoshin
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,7 +25,7 @@ module Kitchen
 	module Transport
 		# Transport for Lxd driver for Kitchen.
 		#
-		# @author Juri Timošin <draco.ater@gmail.com>
+		# @author Juri Timoshin <draco.ater@gmail.com>
 		class Lxd < Base
 			kitchen_transport_api_version 2
 
@@ -31,16 +33,16 @@ module Kitchen
 				transport.instance.driver.container
 			end
 
-			def connection( state, &block )
-				@connection = Connection.new( config.to_hash.merge( state ), &block )
+			def connection(state, &block)
+				@connection = Connection.new(config.to_hash.merge(state), &block)
 			end
 
 			class Connection < Base::Connection
 				extend Forwardable
 
-				def initialize( opts )
+				def initialize(opts)
 					@container = opts[:container]
-					super( opts )
+					super(opts)
 				end
 
 				def_delegators :@container, :execute, :login_command, :upload, :wait_until_ready

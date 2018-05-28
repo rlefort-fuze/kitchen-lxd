@@ -1,24 +1,47 @@
+# frozen_string_literal: true
+
 require 'rake/clean'
 require 'rake/testtask'
 require 'rubygems/package_task'
+require 'rdoc/rdoc'
 
 require_relative 'lib/kitchen/driver/version'
 
-CLEAN << 'doc'
-CLEAN << 'test/coverage'
-CLEAN << 'test/reports'
+CLEAN << 'html'
 
-Gem::PackageTask.new( Gem::Specification.load( 'kitchen-lxd.gemspec' ) ) do end
+RDoc::Task.new do |t|
+	t.main = 'README.md'
+	t.rdoc_files.include('README.md', 'lib/**/*.rb')
+end
+
+CLEAN << 'doc'
+
+Gem::PackageTask.new(Gem::Specification.load('kitchen-lxd.gemspec')){}
 
 desc 'Install this gem locally.'
-task :install, [:user_install] => :gem do |t, args|
-	args.with_defaults( user_install: Process.uid != 0  )
-	Gem::Installer.new( "pkg/kitchen-lxd-#{Kitchen::Driver::Lxd::VERSION}.gem",
-		user_install: args.user_install ).install
+task :install, [:user_install] => :gem do |_t, args|
+	args.with_defaults(user_install: Process.uid != 0)
+	Gem::Installer.new("pkg/kitchen-lxd-#{Kitchen::Driver::Lxd::VERSION}.gem",
+		user_install: args.user_install).install
+end
+
+begin
+	require 'rubocop/rake_task'
+	RuboCop::RakeTask.new(:rubocop) do |t|
+		t.options = ['--display-cop-names']
+	end
+	task default: :rubocop
+	task 'test:all': :rubocop
+rescue LoadError
+	puts "Rubocop not found. It's rake tasks are disabled."
 end
 
 namespace :test do
-	%w{unit integration}.each do |name|
+	CLEAN << 'test/coverage'
+	CLEAN << 'test/unit.log'
+	CLEAN << 'test/integration.log'
+
+	%w[unit integration].each do |name|
 		Rake::TestTask.new name do |t|
 			t.description = "Run #{name} tests and generate coverage reports."
 			t.verbose = true
@@ -28,11 +51,14 @@ namespace :test do
 	end
 
 	desc 'Run all tests and generate coverage reports.'
-	task :all => [:unit, :integration]
+	task all: %i[unit integration]
 end
+task default: 'test:unit'
 
 namespace :ci do
-	%w{all unit integration}.each do |name|
+	CLEAN << 'test/reports'
+
+	%w[all unit integration].each do |name|
 		desc "Run #{name} tests and generate report for CI."
 		task name do
 			ENV['CI_REPORTS'] = 'test/reports/'

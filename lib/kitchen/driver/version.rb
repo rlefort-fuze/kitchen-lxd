@@ -1,8 +1,10 @@
-# -*- encoding: utf-8 -*-
+
+# frozen_string_literal: true
+
 #
-# Author:: Juri Timošin (<draco.ater@gmail.com>)
+# Author:: Juri Timoshin (<draco.ater@gmail.com>)
 #
-# Copyright (C) 2017, Juri Timošin
+# Copyright (C) 2017, Juri Timoshin
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

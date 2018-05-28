@@ -1,8 +1,9 @@
-# -*- encoding: utf-8 -*-
+# frozen_string_literal: true
+
 #
-# Author:: Juri Timošin (<draco.ater@gmail.com>)
+# Author:: Juri Timoshin (<draco.ater@gmail.com>)
 #
-# Copyright (C) 2017, Juri Timošin
+# Copyright (C) 2017, Juri Timoshin
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,8 +27,8 @@ module Kitchen
 			module IntegrationTest
 				class ContainerTest < Minitest::Test
 					def setup
-						@subj = Lxd::Container.new( ::Logger.new( StringIO.new ), container: 'kitchen-lxd-test',
-							image: 'alpine/3.6', binary: 'lxc', remote: 'images' )
+						@subj = Lxd::Container.new(::Logger.new(StringIO.new), container: 'kitchen-lxd-test',
+							image: 'alpine/3.6', binary: 'lxc', remote: 'images')
 					end
 
 					def teardown
@@ -50,12 +51,12 @@ module Kitchen
 
 					def test_attach_network_success
 						@subj.init
-						assert_equal false, @subj.device_attached?( 'lxdbr0' )
-						assert_equal false, @subj.state[:devices].has_key?( 'lxdbr0' )
+						assert_equal false, @subj.device_attached?('lxdbr0')
+						assert_equal false, @subj.state[:devices].key?('lxdbr0')
 						@subj.attach_network 'lxdbr0'
-						assert_equal true, @subj.device_attached?( 'lxdbr0' )
-						assert_equal( { nictype: "bridged", parent: "lxdbr0", type: "nic"},
-							@subj.state[:devices][:lxdbr0] )
+						assert_equal true, @subj.device_attached?('lxdbr0')
+						assert_equal({ nictype: 'bridged', parent: 'lxdbr0', type: 'nic' },
+							@subj.state[:devices][:lxdbr0])
 
 						# further calls do not change state
 						state = @subj.state
@@ -103,29 +104,36 @@ module Kitchen
 					def test_execute
 						@subj.init
 						@subj.start
-						assert_equal 'kitchen-lxd-test x86_64 Linux', @subj.execute( 'uname -nmo' ).strip
+						assert_equal 'kitchen-lxd-test x86_64 Linux', @subj.execute('uname -nmo').strip
 					end
 
 					def test_login_command_exists_in_container
 						@subj.init
 						@subj.start
-						assert_equal '/bin/sh', @subj.execute( 'which ' +
-							@subj.login_command.command.split( '--' ).last ).strip
+						assert_equal '/bin/sh', @subj.execute('which ' +
+							@subj.login_command.command.split('--').last).strip
 					end
 
 					def test_upload
 						@subj.init
 						@subj.start
-						@subj.upload( [File.expand_path( '.gitignore' )], '/tmp' )
-						assert_equal IO.read('.gitignore'), @subj.execute( 'cat /tmp/.gitignore' )
+						assert_equal true, @subj.running?
+						assert_equal '', @subj.upload([File.expand_path('.gitignore')], '/tmp')
+						assert_equal IO.read('.gitignore'), @subj.execute('cat /tmp/.gitignore')
 					end
 
 					def test_download_image
-						assert_equal '', `lxc image delete #{@subj.instance_variable_get( :@image )}`
-						assert_equal '', `lxc image list #{@subj.instance_variable_get( :@image )} --format csv`
+						assert_equal '', `lxc image delete #{@subj.instance_variable_get(:@image)}`
+						assert_equal '', `lxc image list #{@subj.instance_variable_get(:@image)} --format csv`
 						@subj.init
 						assert_equal "alpine/3.6 (3 more)\n",
-							`lxc image list #{@subj.instance_variable_get( :@image )} --format csv -c l`
+							`lxc image list #{@subj.instance_variable_get(:@image)} --format csv -c l`
+					end
+
+					def test_install_chef
+						@subj.init
+						@subj.attach_network 'lxdbr0'
+						@subj.start
 					end
 				end
 			end

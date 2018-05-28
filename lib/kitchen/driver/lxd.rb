@@ -1,8 +1,10 @@
-# -*- encoding: utf-8 -*-
+
+# frozen_string_literal: true
+
 #
-# Author:: Juri Timošin (<draco.ater@gmail.com>)
+# Author:: Juri Timoshin (<draco.ater@gmail.com>)
 #
-# Copyright (C) 2017, Juri Timošin
+# Copyright (C) 2017, Juri Timoshin
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,8 +25,9 @@ module Kitchen
 	module Driver
 		# Lxd driver for Kitchen.
 		#
-		# @author Juri Timošin <draco.ater@gmail.com>
+		# @author Juri Timoshin <draco.ater@gmail.com>
 		class Lxd < Kitchen::Driver::Base
+			include ShellOut
 			MIN_LXD_VERSION = '2.3'
 
 			kitchen_driver_api_version 2
@@ -32,6 +35,7 @@ module Kitchen
 			default_config :binary, 'lxc'
 			default_config :remote, 'images'
 			default_config :network, 'lxdbr0'
+			default_config :config
 			default_config :wait_until_ready, true
 			default_config :fix_chef_install, false
 			default_config :fix_hostnamectl_bug, true # https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1575779
@@ -44,33 +48,33 @@ module Kitchen
 				driver.instance.name
 			end
 
-			def create( state )
-				container.init
+			def create(state)
+				container.init(config[:config])
 				container.attach_network config[:network] if config[:network]
 				container.start
 
-				state[:hostname] = instance.transport.connection( state ).wait_until_ready if config[:wait_until_ready]
-				container.fix_chef_install( instance.platform.name ) if config[:fix_chef_install]
+				if config[:wait_until_ready]
+					state[:hostname] = instance.transport.connection(state).wait_until_ready
+				end
+				container.fix_chef_install(instance.platform.name) if config[:fix_chef_install]
 				container.fix_hostnamectl_bug if config[:fix_hostnamectl_bug]
 			end
 
-			def destroy( state )
-				instance.transport.connection( state ).close
+			def destroy(state)
+				instance.transport.connection(state).close
 				state.delete :hostname
 				container.destroy
 			end
 
 			def verify_dependencies
-				return
-				version = run_command( "#{config[:binary]} --version" ).strip
-				if Gem::Version.new( version ) < Gem::Version.new( MIN_LXD_VERSION )
-					raise UserError, "Detected old version of Lxd (#{version}), please upgrade to version "\
-						"#{MIN_LXD_VERSION} or higher."
-				end
+				version = run_command("#{config[:binary]} --version").strip
+				return if Gem::Version.new(version) >= Gem::Version.new(MIN_LXD_VERSION)
+				raise UserError, "Detected old version of Lxd (#{version}), please upgrade to version "\
+					"#{MIN_LXD_VERSION} or higher."
 			end
 
 			def container
-				@container ||= Lxd::Container.new( logger, config )
+				@container ||= Lxd::Container.new(logger, config)
 			end
 		end
 	end

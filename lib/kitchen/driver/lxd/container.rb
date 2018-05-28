@@ -1,8 +1,10 @@
-# -*- encoding: utf-8 -*-
+
+# frozen_string_literal: true
+
 #
-# Author:: Juri Timošin (<draco.ater@gmail.com>)
+# Author:: Juri Timoshin (<draco.ater@gmail.com>)
 #
-# Copyright (C) 2017, Juri Timošin
+# Copyright (C) 2017, Juri Timoshin
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,33 +31,35 @@ module Kitchen
 				attr_reader :logger
 				attr_reader :state
 
-				def initialize( logger, opts )
+				def initialize(logger, opts)
 					@logger = logger
 					@name = opts[:container]
 					@image = opts[:image]
 					@remote = opts[:remote]
 					@binary = opts[:binary]
+					@fix_hostnamectl_bug = opts[:fix_hostnamectl_bug]
 				end
 
-				def init
+				def init(config)
 					return if created?
 					download_image unless image_exists?
-					run_command "#@binary init #@image #@name"
+					config_args = config.nil? ? '' : config.map{|k, v| "-c #{k}=#{v}" }.join(' ')
+					run_command "#{@binary} init #{@image} #{@name} #{config_args}"
 				end
 
-				def attach_network( network )
+				def attach_network(network)
 					return if device_attached? network
-					run_command "#@binary network attach #{network} #@name"
+					run_command "#{@binary} network attach #{network} #{@name}"
 				end
 
 				def start
 					return if running?
-					run_command "#@binary start #@name"
+					run_command "#{@binary} start #{@name}"
 				end
 
 				def destroy
 					return unless created?
-					run_command "#@binary delete #@name --force"
+					run_command "#{@binary} delete #{@name} --force"
 				end
 
 				def wait_until_ready
@@ -66,55 +70,57 @@ module Kitchen
 							i[:family] == 'inet'
 						end
 						return inet[:address] if inet
-						sleep 1 unless defined?( Kitchen::Driver::UnitTest )
+						sleep 1 unless defined?(Kitchen::Driver::UnitTest)
 					end
 					nil
 				end
 
 				def download_image
-					run_command "#@binary image copy --copy-aliases #@remote:#@image local:"
+					run_command "#{@binary} image copy --copy-aliases #{@remote}:#{@image} local:"
 				end
 
-				def execute( command )
+				def execute(command)
 					return if command.nil? or command.empty?
-					run_command "#@binary exec #@name -- #{command}"
+					fix_hostnamectl_bug if @fix_hostnamectl_bug
+					run_command "#{@binary} exec #{@name} -- #{command}"
 				end
 
 				def login_command
-					LoginCommand.new( "#@binary exec #@name -- sh", {} )
+					LoginCommand.new("#{@binary} exec #{@name} -- $(#{@binary} exec #{@name} -- head -1 "\
+						'/etc/passwd | cut -d: -f7)', {})
 				end
 
-				def upload( locals, remote )
-					# Mixlib::ShellOut.new("#@binary file push --verbose --debug -r #{locals.join(' ')} #@name#{remote}" ).run_command
-					run_command "#@binary file push -r #{locals.join(' ')} #@name#{remote}"
+				def upload(locals, remote)
+					run_command "#{@binary} file push -r #{locals.join(' ')} #{@name}#{remote}"
 				end
 
-				def fix_chef_install( platform )
+				def fix_chef_install(platform)
 					case platform
 					when /ubuntu/, /debian/
-						execute "apt install -y wget"
+						execute 'apt-get update'
+						execute 'apt-get install -y wget'
 					when /rhel/, /centos/
 						execute 'yum install -y sudo wget'
 					end
 				end
 
 				def fix_hostnamectl_bug
-					logger.info "Replace /usr/bin/hostnamectl with /usr/bin/true, because of bug in Ubuntu. (https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1575779)"
-					execute 'rm /usr/bin/hostnamectl'
-					execute 'ln -s /usr/bin/true /usr/bin/hostnamectl'
+					logger.info 'Replace /usr/bin/hostnamectl with /usr/bin/true, because of bug in Ubuntu'\
+						'. (https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1575779)'
+					run_command "#{@binary} exec #{@name} -- ln -fs /usr/bin/true /usr/bin/hostnamectl"
 				end
 
-#				private
+    #				private
 
 				def image_exists?
 					!JSON.parse(
-						run_command( "#@binary image list #@image --format json" ), symbolize_names: true
+						run_command("#{@binary} image list #{@image} --format json"), symbolize_names: true
 					).empty?
 				end
 
 				def fetch_state
 					@state = JSON.parse(
-						run_command( "#@binary list #@name --format json" ), symbolize_names: true
+						run_command("#{@binary} list #{@name} --format json"), symbolize_names: true
 					).first
 				end
 
@@ -126,7 +132,7 @@ module Kitchen
 					!fetch_state.nil?
 				end
 
-				def device_attached?( network )
+				def device_attached?(network)
 					fetch_state.dig(:devices, network.to_sym) ? true : false
 				end
 			end
