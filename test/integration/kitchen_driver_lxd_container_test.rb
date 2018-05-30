@@ -110,8 +110,8 @@ module Kitchen
 					def test_login_command_exists_in_container
 						@subj.init
 						@subj.start
-						assert_equal '/bin/sh', @subj.execute('which ' +
-							@subj.login_command.command.split('--').last).strip
+						assert_equal '/bin/ash', @subj.execute('which ' +
+							@subj.login_command.command.split('--', 2).last).strip
 					end
 
 					def test_upload
@@ -130,7 +130,7 @@ module Kitchen
 							`lxc image list #{@subj.instance_variable_get(:@image)} --format csv -c l`
 					end
 
-					def test_install_chef
+					def test_install_chef_fail
 						@subj.init
 						@subj.attach_network 'lxdbr0'
 						@subj.start

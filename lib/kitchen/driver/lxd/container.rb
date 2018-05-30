@@ -40,10 +40,10 @@ module Kitchen
 					@fix_hostnamectl_bug = opts[:fix_hostnamectl_bug]
 				end
 
-				def init(config)
+				def init(config={})
 					return if created?
 					download_image unless image_exists?
-					config_args = config.nil? ? '' : config.map{|k, v| "-c #{k}=#{v}" }.join(' ')
+					config_args = config.map{|k, v| "-c #{k}=#{v}" }.join(' ')
 					run_command "#{@binary} init #{@image} #{@name} #{config_args}"
 				end
 
@@ -91,6 +91,7 @@ module Kitchen
 				end
 
 				def upload(locals, remote)
+					return if locals.nil? or locals.empty?
 					run_command "#{@binary} file push -r #{locals.join(' ')} #{@name}#{remote}"
 				end
 

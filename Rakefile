@@ -7,14 +7,14 @@ require 'rdoc/rdoc'
 
 require_relative 'lib/kitchen/driver/version'
 
-CLEAN << 'html'
+CLOBBER << 'html'
 
 RDoc::Task.new do |t|
 	t.main = 'README.md'
 	t.rdoc_files.include('README.md', 'lib/**/*.rb')
 end
 
-CLEAN << 'doc'
+CLOBBER << 'doc'
 
 Gem::PackageTask.new(Gem::Specification.load('kitchen-lxd.gemspec')){}
 
@@ -31,15 +31,16 @@ begin
 		t.options = ['--display-cop-names']
 	end
 	task default: :rubocop
-	task 'test:all': :rubocop
+	task 'test:unit': :rubocop
+	task 'test:integration': :rubocop
 rescue LoadError
 	puts "Rubocop not found. It's rake tasks are disabled."
 end
 
 namespace :test do
-	CLEAN << 'test/coverage'
-	CLEAN << 'test/unit.log'
-	CLEAN << 'test/integration.log'
+	CLOBBER << 'test/coverage'
+	CLOBBER << 'test/unit.log'
+	CLOBBER << 'test/integration.log'
 
 	%w[unit integration].each do |name|
 		Rake::TestTask.new name do |t|
@@ -56,7 +57,7 @@ end
 task default: 'test:unit'
 
 namespace :ci do
-	CLEAN << 'test/reports'
+	CLOBBER << 'test/reports'
 
 	%w[all unit integration].each do |name|
 		desc "Run #{name} tests and generate report for CI."

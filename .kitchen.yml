@@ -10,7 +10,7 @@ transport:
 
 #provisioner:
 #  name: shell
-#
+
 #verifier:
 #  name: shell
 #  command: rake test:integration

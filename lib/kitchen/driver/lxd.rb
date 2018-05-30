@@ -35,7 +35,7 @@ module Kitchen
 			default_config :binary, 'lxc'
 			default_config :remote, 'images'
 			default_config :network, 'lxdbr0'
-			default_config :config
+			default_config :config, {}
 			default_config :wait_until_ready, true
 			default_config :fix_chef_install, false
 			default_config :fix_hostnamectl_bug, true # https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1575779
