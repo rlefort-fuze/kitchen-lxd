@@ -43,7 +43,7 @@ module Kitchen
 				def init(config={})
 					return if created?
 					download_image unless image_exists?
-					config_args = config.map{|k, v| "-c #{k}=#{v}" }.join(' ')
+					config_args = config.map{|k, v| "-c #{k}='#{v}'" }.join(' ')
 					run_command "#{@binary} init #{@image} #{@name} #{config_args}"
 				end
 

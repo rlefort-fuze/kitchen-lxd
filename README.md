@@ -1,5 +1,12 @@
 # Kitchen::Lxd
 
+[author]:           https://github.com/DracoAter
+[issues]:           https://github.com/DracoAter/kitchen-lxd/issues
+[license]:          https://github.com/DracoAter/kitchen-lxd/blob/master/LICENSE
+[repo]:             https://github.com/DracoAter/kitchen-lxd
+[hostnamectl bug]: https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1575779
+[lxd_doc]: https://github.com/lxc/lxd/blob/master/doc/containers.md
+
 [![Build Status](https://travis-ci.org/DracoAter/kitchen-lxd.svg?branch=master)](https://travis-ci.org/DracoAter/kitchen-lxd)
 [![Gem Version](https://badge.fury.io/rb/kitchen-lxd.svg)](https://badge.fury.io/rb/kitchen-lxd)
 
@@ -49,6 +56,7 @@ driver:
   network: lxdbr0 # default
   fix_chef_install: false # default
   fix_hostnamectl_bug: true # default
+  config: {} # default
 
 transport:
   name: lxd
@@ -65,6 +73,17 @@ transport:
   name: lxd
 ```
 
+You can specify different keys/values under `config`. Look for list of the available items in
+[Lxd Documentation][lxd_doc]. For example, if you need to start container in privileged mode, add:
+
+```yaml
+---
+driver:
+  name:lxd
+  config:
+    security.privileged: true
+```
+
 ### Driver
 
 Available options:
@@ -75,8 +94,9 @@ binary | Path to lxc executable. | String | `lxc`
 remote | Remote LXD server to download image from, if it does not exist locally. | String | `images`
 network | Network bridge to attach to container. | String | `lxdbr0`
 wait_until_ready | Wait for the network to come up. | Boolean | `true`
+config | Config key/value to apply to the new container. This hash is passed to `lxc init` command as --config parameters. | Hash | `{}`
 fix_chef_install | Apply fix, to make available installation of Chef Omnibus package. | Boolean | `false`
-fix_hostnamectl_bug | Apply workaround to Ubuntu [hostnamectl bug](https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1575779) in LXD. | Boolean | `true`
+fix_hostnamectl_bug | Apply workaround to Ubuntu [hostnamectl bug][hostnamectl bug] in LXD. | Boolean | `true`
 
 ## Development
 
@@ -100,8 +120,3 @@ Created and maintained by [Juri Timošin][author].
 ## License
 
 Apache 2.0 (see [LICENSE][license])
-
-[author]:           https://github.com/DracoAter
-[issues]:           https://github.com/DracoAter/kitchen-lxd/issues
-[license]:          https://github.com/DracoAter/kitchen-lxd/blob/master/LICENSE
-[repo]:             https://github.com/DracoAter/kitchen-lxd

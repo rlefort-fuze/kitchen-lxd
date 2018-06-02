@@ -1,3 +1,8 @@
+## 0.3.0 (June 2, 2018)
+
+- Introduce `config` parameter in configuration that is passed to `lxc init` as `--config`
+  parameter.
+
 ## 0.2.2 (January 30, 2018)
 
 - Fix upload bug.

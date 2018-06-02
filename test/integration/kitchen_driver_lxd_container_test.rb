@@ -130,6 +130,13 @@ module Kitchen
 							`lxc image list #{@subj.instance_variable_get(:@image)} --format csv -c l`
 					end
 
+					def test_run_privileged_container_using_config
+						@subj.init('security.privileged': true)
+						assert_equal 'true', @subj.fetch_state[:config][:'security.privileged']
+						@subj.start
+						assert_equal 'true', @subj.fetch_state[:config][:'security.privileged']
+					end
+
 					def test_install_chef_fail
 						@subj.init
 						@subj.attach_network 'lxdbr0'
