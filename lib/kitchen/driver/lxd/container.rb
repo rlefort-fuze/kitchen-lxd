@@ -19,6 +19,7 @@
 # limitations under the License.
 
 require 'kitchen'
+require 'tempfile'
 require 'json'
 
 module Kitchen
@@ -83,7 +84,13 @@ module Kitchen
 				def execute(command)
 					return if command.nil? or command.empty?
 					fix_hostnamectl_bug if @fix_hostnamectl_bug
-					run_command "#{@binary} exec #{@name} -- #{command}"
+                    command_file = Tempfile.create do |f|
+                      f.write(command)
+                      f.rewind
+                      run_command "#{@binary} file push -p --mode 777 #{f.path} #{@name}#{f.path}"
+                      run_command "#{@binary} exec --user 0 #{@name} -- bash -s < #{f.path}"
+                      run_command "#{@binary} exec --user 0 #{@name} -- rm -f #{f.path}"
+                    end
 				end
 
 				def login_command
