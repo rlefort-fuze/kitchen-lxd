@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
 
 	s.required_ruby_version = '~> 2.3'
 
-	s.add_dependency 'test-kitchen', '~> 1.17'
+	s.add_dependency 'test-kitchen', '~> 2.00'
 
 	s.add_development_dependency 'ci_reporter_minitest', '~> 1.0'
 	s.add_development_dependency 'minitest', '~> 5.5'
