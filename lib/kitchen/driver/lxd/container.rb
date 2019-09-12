@@ -38,13 +38,14 @@ module Kitchen
 					@remote = opts[:remote]
 					@binary = opts[:binary]
 					@fix_hostnamectl_bug = opts[:fix_hostnamectl_bug]
+                    @lxd_remote = %x<echo -n $(#{@binary} remote get-default)>
 				end
 
 				def init(config={})
 					return if created?
 					download_image unless image_exists?
 					config_args = config.map{|k, v| "-c #{k}='#{v}'" }.join(' ')
-					run_command "#{@binary} init #{@image} #{@name} #{config_args}"
+					run_command "#{@binary} init #{@lxd_remote}:#{@image} #{@name} #{config_args}"
 				end
 
 				def attach_network(network)
@@ -76,7 +77,7 @@ module Kitchen
 				end
 
 				def download_image
-					run_command "#{@binary} image copy --copy-aliases #{@remote}:#{@image} local:"
+					run_command "#{@binary} image copy --copy-aliases #{@remote}:#{@image} #{@lxd_remote}:"
 				end
 
 				def execute(command)
