@@ -33,6 +33,16 @@ module Kitchen
 				transport.instance.driver.container
 			end
 
+            def finalize_config!(instance)
+              super.tap do
+                if defined?(Kitchen::Verifier::Inspec) && instance.verifier.is_a?(Kitchen::Verifier::Inspec)
+                  instance.verifier.send(:define_singleton_method, :runner_options_for_lxd) do |config_data|
+                    runner_options_for_exec(config_data)
+                  end
+                end
+              end
+            end
+
 			def connection(state, &block)
 				@connection = Connection.new(config.to_hash.merge(state), &block)
 			end
