@@ -88,8 +88,8 @@ module Kitchen
                       f.write(command)
                       f.rewind
                       run_command "#{@binary} file push -p --mode 777 #{f.path} #{@name}#{f.path}"
-                      run_command "#{@binary} exec --user 0 #{@name} -- bash -s < #{f.path}"
-                      run_command "#{@binary} exec --user 0 #{@name} -- rm -f #{f.path}"
+                      run_command "#{@binary} exec #{@name} -- bash -s < #{f.path}"
+                      run_command "#{@binary} exec #{@name} -- rm -f #{f.path}"
                     end
 				end
 
