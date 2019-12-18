@@ -100,7 +100,7 @@ module Kitchen
 
 				def upload(locals, remote)
 					return if locals.nil? or locals.empty?
-					run_command "#{@binary} file push -r #{locals.join(' ')} #{@name}#{remote}"
+					run_command "tar zcf - #{locals.join(' ')} | #{@binary} exec  #{@name} -- tar zxvf -  --strip=2 -C #{remote}"
 				end
 
 				def fix_chef_install(platform)
@@ -118,8 +118,6 @@ module Kitchen
 						'. (https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1575779)'
 					run_command "#{@binary} exec #{@name} -- ln -fs /usr/bin/true /usr/bin/hostnamectl"
 				end
-
-    #				private
 
 				def image_exists?
 					!JSON.parse(
